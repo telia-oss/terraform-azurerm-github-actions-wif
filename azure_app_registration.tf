@@ -26,7 +26,12 @@ resource "azuread_application" "github_oidc" {
   api {
     requested_access_token_version = 2
   }
+  logo_image = filebase64("${path.module}/assets/gha.png")
 
+  notes  = <<EOT
+    This application is used by the GitHub Actions Workload Identity Federation module to authenticate to Azure.
+    For more information, see https://github.com/${each.value.repository_name} -> Settings -> Actions -> Workload Identity Federation.
+    EOT
   owners = local.application_owners
 }
 
