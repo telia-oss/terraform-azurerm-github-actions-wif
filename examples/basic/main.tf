@@ -23,7 +23,7 @@ module "gha_repo1" {
             }
           }
           inline_roles = {
-            "[Custom] Resource Group Owner" = {
+            "[Custom] Resource Group Owner 2" = {
               name       = "Resource Group Owner"
               assignable = true
               scope      = "/subscriptions/232dfc78-375f-4f06-9e1d-e4d622ccbb60/resourceGroups/github-oidc-demo-2-dev"
@@ -37,7 +37,7 @@ module "gha_repo1" {
         {
           environment = "production"
           name_prefix = "app1-prod"
-          application_id  = "01b38d31-bb2a-4eff-963d-a166b9a8358a"
+          # application_id  = "01b38d31-bb2a-4eff-963d-a166b9a8358a"
           subscription_id = "232dfc78-375f-4f06-9e1d-e4d622ccbb60"
           tags = {
             Environment = "production"
@@ -49,7 +49,7 @@ module "gha_repo1" {
             }
           }
         }
-      ],
+      ]
 
     },
 
