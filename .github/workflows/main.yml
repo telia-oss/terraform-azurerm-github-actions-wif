@@ -36,10 +36,11 @@ jobs:
         run: terraform validate -no-color
         continue-on-error: true
 
-      - name: Install tflint
-        run: |
-          curl -L "$(curl -s https://api.github.com/repos/terraform-linters/tflint/releases/latest | grep -o -E "https://.+?_Linux_x86_64.tar.gz")" > tflint.tar.gz && tar -xvf tflint.tar.gz && sudo mv tflint /usr/local/bin/
-
+      - uses: terraform-linters/setup-tflint@v3
+        name: Setup TFLint
+        with:
+          tflint_version: v0.44.1
+          
       - name: Terraform Lint
         id: tflint
         run: |
