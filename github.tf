@@ -44,7 +44,7 @@ resource "github_actions_environment_secret" "azure_client_id" {
   repository      = local.github_repository_names[each.value.repository_name]
   environment     = each.value.environment
   secret_name     = "AZURE_CLIENT_ID"
-  plaintext_value = each.value.application_id != null ? data.azuread_application.existing[each.value.environment].application_id : azuread_application.github_oidc[each.value.environment].application_id
+  plaintext_value = each.value.application_id != null ? data.azuread_application.existing["${each.value.repository_name}-${each.value.environment}"].application_id : azuread_application.github_oidc["${each.value.repository_name}-${each.value.environment}"].application_id
 }
 
 # The GitHub repository environment secret resource is used to create the repository environment secrets

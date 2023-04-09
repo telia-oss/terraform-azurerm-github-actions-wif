@@ -78,9 +78,10 @@ output "standard_role_assignments" {
 output "inline_role_definitions" {
   value = {
     for key, definition in azurerm_role_definition.inline_role_definition : key => {
-      name        = definition.name
-      description = definition.description
-      scope       = definition.scope
+      name                        = definition.name
+      description                 = definition.description
+      scope                       = definition.scope
+      role_definition_resource_id = definition.role_definition_resource_id
     }
   }
   description = "Information about the inline role definitions."

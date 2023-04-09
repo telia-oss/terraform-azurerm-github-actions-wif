@@ -4,8 +4,6 @@
 
 This Terraform module integrates GitHub Actions with Workload Identity Federation for Microsoft Azure. It simplifies the process of setting up and managing Azure Role-based Access Control (RBAC) for GitHub Actions environments by creating the necessary resources and configuring the required secrets.
 
-> **Note:** This module does not currently support the creation of Azure AD applications and service principals for GitHub Actions environments, it can only be used to reference existing ones. We are working on adding support for this in the near future.
-
 ## Background
 
 Workload Identity Federation for Microsoft Azure allows you to use Azure AD to authenticate and authorize users and applications to access Azure resources. This module simplifies the process of setting up and managing Azure RBAC for GitHub Actions environments by creating the necessary resources and configuring the required secrets.
