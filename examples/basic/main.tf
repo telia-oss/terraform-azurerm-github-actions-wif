@@ -1,7 +1,7 @@
 module "gha_repo1" {
   source = "../../"
 
-  name_prefix = "app1"
+  name_prefix = "demo"
   environment = "development"
 
   repositories = [
