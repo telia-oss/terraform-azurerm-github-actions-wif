@@ -74,20 +74,14 @@ variable "default_tags" {
   }
 }
 
-variable "roles" {
-  description = "Built-in roles and scopes for the Service Principal"
-  type        = map(list(string))
-  default     = {}
-}
-
-variable "custom_roles" {
-  description = "Custom roles and scopes for the Service Principal"
-  type        = map(object({ scopes = list(string), description = string }))
-  default     = {}
-}
-
 variable "owners" {
   description = "List of object IDs of the application owners."
   type        = list(string)
+  default     = null
+}
+
+variable "override_subject_template_path" {
+  description = "set this to override the default subject template for the workload identity subject."
+  type        = string
   default     = null
 }

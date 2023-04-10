@@ -10,14 +10,24 @@ Workload Identity Federation for Microsoft Azure allows you to use Azure AD to a
 
 See references below for more information about Workload Identity Federation for Microsoft Azure and GitHub Actions.
 
+## Requirements
+
+- Existing Azure Active Directory (AD) tenant.
+- Permissions to create and manage Azure AD applications and service principals.
+- Existing GitHub repository with GitHub Actions enabled, and GitHub Actions environments configured.
+- Logged in to Azure CLI using `az login`.
+- Credentials fo GitHub, either using a [personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) or [GitHub App](https://docs.github.com/en/developers/apps/getting-started-with-apps/about-apps).
+
 ## Features
 
-- Create and manage Azure Active Directory (AD) applications and service principals for GitHub repositories' environments.
-- Configure GitHub repository environments with Azure environment secrets.
+- Creates and manage existing Azure Active Directory (AD) applications and service principals for GitHub repositories' environments.
 - Assign custom and built-in Azure RBAC roles to the service principal associated with each environment.
-- Support for both creating new Azure AD applications and referencing existing ones.
+- Configures trust against GitHub through GitHub Actions environments with Azure AD application federated credentials.
+- Configure existing GitHub repository with environment secrets, that provides required configurations.
 
 ## Usage
+
+The following example creates a new Azure AD application and service principal for each environment in the repository `my-repo`. The service principal is assigned the built-in Azure RBAC role `Contributor` for the subscription `your-subscription-id` in the environment `staging`. The service principal is assigned the built-in Azure RBAC role `Reader` for the subscription `your-subscription-id` in the environment `production`. The service principal for the environment `production` is configured to use an existing Azure AD application with the ID `your-existing-application-id`.
 
 ```hcl
 module "azure_gha_wif" {
@@ -56,7 +66,7 @@ module "azure_gha_wif" {
 
 Please see the [examples](./examples) directory for examples of how to use this module.
 
-## Requirements
+## Providers
 
 | Name      | Version |
 | --------- | ------- |
@@ -64,14 +74,6 @@ Please see the [examples](./examples) directory for examples of how to use this 
 | azuread   | >= 2.0  |
 | azurerm   | >= 2.0  |
 | github    | >= 4.0  |
-
-## Providers
-
-| Name    | Version |
-| ------- | ------- |
-| azuread | >= 2.0  |
-| azurerm | >= 2.0  |
-| github  | >= 4.0  |
 
 ## Inputs
 
@@ -87,3 +89,11 @@ Please see the [examples](./examples) directory for examples of how to use this 
 - [Workload Identity Federation for Microsoft Azure](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-convert-app-to-be-workload-identity)
 - [GitHub Actions: Workload Identity Federation](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-workload-identity-federation-for-azure)
 - [GitHub Actions: Azure credentials](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-azure-credentials-for-github-actions)
+
+## Contributing
+
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on submitting patches and the contribution workflow.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.

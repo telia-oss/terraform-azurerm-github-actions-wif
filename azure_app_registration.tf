@@ -16,6 +16,8 @@ locals {
   environments_to_reference_apps = [
     for env in local.repo_environments : env if env.application_id != null
   ]
+
+  subject_template_path = var.override_subject_template_path != null ? var.override_subject_template_path : "${path.module}/templates/subject_template.tpl"
 }
 
 # The Azure Active Directory application resource is used to create the GitHub OIDC app
@@ -28,11 +30,11 @@ resource "azuread_application" "github_oidc" {
   }
   logo_image = filebase64("${path.module}/assets/gha.png")
 
-  notes  = <<EOT
+  description = <<EOT
     This application is used by the GitHub Actions Workload Identity Federation module to authenticate to Azure.
     For more information, see https://github.com/${each.value.repository_name} -> Settings -> Actions -> Workload Identity Federation.
     EOT
-  owners = local.application_owners
+  owners      = local.application_owners
 }
 
 # The Azure Active Directory service principal resource is used to create the GitHub OIDC app service principal
@@ -45,6 +47,12 @@ data "azuread_application" "existing" {
 resource "azuread_service_principal" "github_oidc" {
   for_each       = { for env in local.environments_to_create_apps : "${env.repository_name}-${env.environment}" => env }
   application_id = azuread_application.github_oidc["${each.value.repository_name}-${each.value.environment}"].application_id
+  description    = <<EOT
+    This service principal is used by the GitHub Actions Workload Identity Federation module to authenticate to Azure.
+    For more information, see https://github.com/${each.value.repository_name} -> Settings -> Actions -> Workload Identity Federation.
+    EOT
+  notes          = jsonencode(local.tags)
+  owners         = local.application_owners
 }
 
 # The Azure Active Directory application resource is used to create the GitHub OIDC app
@@ -55,5 +63,5 @@ resource "azuread_application_federated_identity_credential" "github_oidc" {
   description           = "Deployments for ${each.value.repository_name} for environment ${each.value.environment}"
   audiences             = [var.audience_name]
   issuer                = var.github_issuer_url
-  subject               = "repo:${each.value.repository_name}:environment:${each.value.environment}"
+  subject               = templatefile(local.subject_template_path, { repository_name = each.value.repository_name, environment = each.value.environment })
 }
