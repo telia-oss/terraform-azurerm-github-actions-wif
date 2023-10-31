@@ -29,15 +29,3 @@ output "github_oidc_applications" {
   value       = module.gha_repo1.github_oidc_applications
   sensitive   = true
 }
-
-output "github_oidc_applications_secrets" {
-  description = "Information about the created GitHub OIDC applications secrets."
-  value       = module.gha_repo1.github_oidc_applications_secrets
-  sensitive   = true
-}
-
-output "github_oidc_service_principals" {
-  description = "Information about the created GitHub OIDC service principals."
-  value       = module.gha_repo1.github_oidc_service_principals
-  sensitive   = true
-}

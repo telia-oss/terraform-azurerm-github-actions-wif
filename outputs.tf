@@ -1,18 +1,19 @@
 output "github_oidc_applications" {
   value = {
     for key, app in azuread_application.github_oidc : key => {
-      application_id = app.application_id
-      display_name   = app.display_name
+      client_id    = app.client_id
+      display_name = app.display_name
     }
   }
   description = "Information about the created GitHub OIDC applications."
+  sensitive   = false
 }
 
 output "github_oidc_service_principals" {
   value = {
     for key, sp in azuread_service_principal.github_oidc : key => {
-      object_id      = sp.object_id
-      application_id = sp.application_id
+      object_id = sp.object_id
+      client_id = sp.client_id
     }
   }
   description = "Information about the created GitHub OIDC service principals."

@@ -7,7 +7,6 @@
 #
 
 locals {
-  github_repository_names = { for repo in data.github_repository.repo : repo.full_name => repo.name }
   flattened_environments = flatten([
     for repo in var.repositories : [
       for environment in repo.environments : {
@@ -15,7 +14,7 @@ locals {
         environment     = environment.environment
         name_prefix     = environment.name_prefix
         subscription_id = try(environment.subscription_id, data.azurerm_subscription.current.subscription_id)
-        application_id  = try(environment.application_id, null)
+        client_id       = try(environment.client_id, null)
         tags            = try(environment.tags, {})
         roles           = try(environment.roles, null)
         inline_roles    = try(environment.inline_roles, null)
@@ -44,7 +43,7 @@ resource "github_actions_environment_secret" "azure_client_id" {
   repository      = data.github_repository.repo[each.value.repository_name].name
   environment     = each.value.environment
   secret_name     = "AZURE_CLIENT_ID"
-  plaintext_value = each.value.application_id != null ? data.azuread_application.existing["${each.value.repository_name}-${each.value.environment}"].application_id : azuread_application.github_oidc["${each.value.repository_name}-${each.value.environment}"].application_id
+  plaintext_value = each.value.client_id != null ? data.azuread_application.existing["${each.value.repository_name}-${each.value.environment}"].client_id : azuread_application.github_oidc["${each.value.repository_name}-${each.value.environment}"].client_id
 }
 
 # The GitHub repository environment secret resource is used to create the repository environment secrets
@@ -68,7 +67,7 @@ resource "github_actions_environment_secret" "azure_tenant_id" {
 /*  This section will be used to to enable Azure backend configuration in GitHub Actions
 resource "github_actions_environment_secret" "backend_azure_resource_group_name" {
   for_each        = local.environment_map
-  repository  = data.github_repository.repo[each.value.repository_name].id
+  repository      = data.github_repository.repo[each.value.repository_name].id
   environment     = each.value.environment
   secret_name     = "BACKEND_AZURE_RESOURCE_GROUP_NAME"
   plaintext_value = azurerm_resource_group.state.name
@@ -76,7 +75,7 @@ resource "github_actions_environment_secret" "backend_azure_resource_group_name"
 
 resource "github_actions_environment_secret" "backend_azure_storage_account_name" {
   for_each        = local.environment_map
-  repository  = data.github_repository.repo[each.value.repository_name].id
+  repository      = data.github_repository.repo[each.value.repository_name].id
   environment     = each.value.environment
   secret_name     = "BACKEND_AZURE_STORAGE_ACCOUNT_NAME"
   plaintext_value = azurerm_storage_account.example.name
@@ -84,7 +83,7 @@ resource "github_actions_environment_secret" "backend_azure_storage_account_name
 
 resource "github_actions_environment_secret" "backend_azure_storage_account_container_name" {
   for_each        = local.environment_map
-  repository  = data.github_repository.repo[each.value.repository_name].id
+  repository      = data.github_repository.repo[each.value.repository_name].id
   environment     = each.value.environment
   secret_name     = "BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME"
   plaintext_value = azurerm_storage_container.example[each.key].name
