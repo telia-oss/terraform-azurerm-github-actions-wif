@@ -8,16 +8,16 @@ on:
 
 jobs:
   terraform:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu22.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.0.0
+          terraform_version: 1.5.7
 
       - name: Terraform Fmt
         id: fmt
@@ -40,7 +40,7 @@ jobs:
         name: Setup TFLint
         with:
           tflint_version: v0.44.1
-          
+
       - name: Terraform Lint
         id: tflint
         run: |
