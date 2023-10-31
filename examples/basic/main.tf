@@ -11,7 +11,6 @@ module "gha_repo1" {
         {
           environment     = "development"
           name_prefix     = "app1-dev"
-          application_id  = "770b4589-b52a-4b10-a039-c4988027dd9a"
           subscription_id = "232dfc78-375f-4f06-9e1d-e4d622ccbb60"
           tags = {
             Environment = "development"
@@ -35,9 +34,8 @@ module "gha_repo1" {
           }
         },
         {
-          environment = "production"
-          name_prefix = "app1-prod"
-          # application_id  = "01b38d31-bb2a-4eff-963d-a166b9a8358a"
+          environment     = "production"
+          name_prefix     = "app1-prod"
           subscription_id = "232dfc78-375f-4f06-9e1d-e4d622ccbb60"
           tags = {
             Environment = "production"

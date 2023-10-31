@@ -9,4 +9,5 @@ provider "azuread" {
 }
 
 provider "github" {
+  owner = "rickardl"
 }

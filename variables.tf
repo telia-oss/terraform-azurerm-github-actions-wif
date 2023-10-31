@@ -9,12 +9,6 @@ variable "name_prefix" {
   }
 }
 
-variable "location" {
-  type        = string
-  default     = "swedencentral"
-  description = "value is the location/region where the resources in the module should be created."
-}
-
 variable "github_issuer_url" {
   type        = string
   default     = "https://token.actions.githubusercontent.com"
@@ -33,7 +27,7 @@ variable "repositories" {
     environments = list(object({
       environment     = string
       name_prefix     = string
-      application_id  = optional(string)
+      client_id       = optional(string)
       subscription_id = optional(string)
       tags            = optional(map(string))
       roles = optional(map(object({

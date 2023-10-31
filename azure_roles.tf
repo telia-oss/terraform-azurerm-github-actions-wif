@@ -12,7 +12,7 @@ locals {
     for repo in var.repositories : [
       for environment in repo.environments : {
         repository_name = repo.repository_name
-        application_id  = environment.application_id
+        client_id       = environment.client_id
         name_prefix     = environment.name_prefix
         environment     = environment.environment
         tags            = lookup(environment, "tags", {})
@@ -27,13 +27,13 @@ locals {
     for env in local.repo_environments : [
       for role_name, role in env.inline_roles : {
         repository_name   = env.repository_name
-        application_id    = env.application_id
+        client_id         = env.client_id
         role_name         = role_name
         name_prefix       = env.name_prefix
         environment       = env.environment
         assignable        = role.assignable
         permissions       = role.permissions
-        scope             = role.scope // try(role.scope, "subscriptions/${data.azurerm_subscription.current.subscription_id}")
+        scope             = role.scope
         assignable_scopes = try(role.assignable_scopes, [role.scope])
       }
     ] if env.inline_roles != null ? length(env.inline_roles) > 0 : false
@@ -46,7 +46,7 @@ locals {
         for scope in lookup(role, "scopes", []) : {
           repository_name    = env.repository_name
           name_prefix        = env.name_prefix
-          application_id     = env.application_id
+          client_id          = env.client_id
           environment        = env.environment
           role_name          = role_name
           role_definition_id = null
@@ -60,9 +60,9 @@ locals {
 # Lookup the service principal for the applications where we got an application ID
 data "azuread_service_principal" "lookup" {
   for_each = {
-    for env in local.environments_to_reference_apps : "${env.repository_name}-${env.application_id}-${env.environment}" => env
+    for env in local.environments_to_reference_apps : "${env.repository_name}-${env.client_id}-${env.environment}" => env
   }
-  application_id = data.azuread_application.existing["${each.value.repository_name}-${each.value.environment}"].application_id
+  client_id = data.azuread_application.existing["${each.value.repository_name}-${each.value.environment}"].client_id
 }
 
 # Standard roles
@@ -72,7 +72,7 @@ resource "azurerm_role_assignment" "standard_role_assignment" {
 
     "${role_assignment.repository_name}-${role_assignment.environment}-${role_assignment.role_name}-${role_assignment.scope}" => role_assignment
   }
-  principal_id = try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.application_id}-${each.value.environment}"].object_id,
+  principal_id = try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.client_id}-${each.value.environment}"].object_id,
   azuread_service_principal.github_oidc["${each.value.repository_name}-${each.value.environment}"].object_id)
   scope                = each.value.scope
   role_definition_name = each.value.role_name
@@ -91,7 +91,7 @@ resource "azurerm_role_assignment" "inline_role_assignment" {
     "${role_assignment.repository_name}-${role_assignment.environment}-${role_assignment.role_name}-${role_assignment.scope}" => role_assignment
   }
 
-  principal_id = try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.application_id}-${each.value.environment}"].object_id,
+  principal_id = try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.client_id}-${each.value.environment}"].object_id,
   azuread_service_principal.github_oidc["${each.value.repository_name}-${each.value.environment}"].object_id)
   scope = each.value.scope
 
