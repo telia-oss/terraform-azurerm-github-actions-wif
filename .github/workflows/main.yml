@@ -44,6 +44,7 @@ jobs:
       - name: Terraform Lint
         id: tflint
         run: |
+          tflint --init
           OUTPUT=$(tflint)
           echo "::set-output name=output::$OUTPUT"
         continue-on-error: true
