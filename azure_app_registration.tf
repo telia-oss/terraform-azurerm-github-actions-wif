@@ -10,11 +10,11 @@ locals {
   application_owners = var.owners == null ? [data.azurerm_client_config.current.object_id] : var.owners
 
   environments_to_create_apps = [
-    for env in local.repo_environments : env if env.client_id == null
+    for env in local.repo_environments : env if env.client_id == null && var.identity_type == "azureAdApplication"
   ]
 
   environments_to_reference_apps = [
-    for env in local.repo_environments : env if env.client_id != null
+    for env in local.repo_environments : env if env.client_id != null && var.identity_type == "azureAdApplication"
   ]
 
   subject_template_path = var.override_subject_template_path != null ? var.override_subject_template_path : "${path.module}/templates/subject_template.tpl"
@@ -58,7 +58,7 @@ resource "azuread_service_principal" "github_oidc" {
 # The Azure Active Directory application resource is used to create the GitHub OIDC app
 
 resource "azuread_application_federated_identity_credential" "github_oidc" {
-  for_each       = { for e in local.repo_environments : "${e.repository_name}-${e.environment}" => e }
+  for_each       = var.identity_type == "azureAdApplication" ? { for e in local.repo_environments : "${e.repository_name}-${e.environment}" => e } : {}
   application_id = try(azuread_application.github_oidc["${each.value.repository_name}-${each.value.environment}"].id, data.azuread_application.existing["${each.value.repository_name}-${each.value.environment}"].id)
   display_name   = replace(each.key, "/", "%2F")
   description    = "Deployments for ${each.value.repository_name} for environment ${each.value.environment}"

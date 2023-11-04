@@ -6,6 +6,7 @@ output "azure_subscription_id_secrets" {
   sensitive   = true
 }
 
+
 output "azure_tenant_id_secrets" {
   description = "Information about the AZURE_TENANT_ID secrets for GitHub repository environments."
   value       = module.gha_repo1.azure_tenant_id_secrets
@@ -23,6 +24,7 @@ output "inline_role_definitions" {
   value       = module.gha_repo1.inline_role_definitions
   sensitive   = true
 }
+
 
 output "github_oidc_applications" {
   description = "Information about the created GitHub OIDC applications."
