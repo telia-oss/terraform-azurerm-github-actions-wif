@@ -13,6 +13,5 @@ provider "azuread" {
 }
 
 provider "github" {
-  alias = "rickardl"
   owner = "rickardl"
 }

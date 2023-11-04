@@ -22,10 +22,8 @@ variable "environment" {
 }
 
 variable "repositories" {
-  type = list(object({
-    repository_name = string
-    environments = list(object({
-      environment           = string
+  type = map(object({
+    environments = map(object({
       name_prefix           = string
       client_id             = optional(string)
       subscription_id       = optional(string)
@@ -47,8 +45,10 @@ variable "repositories" {
       })))
     }))
   }))
-  description = "List of repositories and their respective environments for which to create secrets and configure permissions."
+  description = "Map of repositories and their respective environments for which to create secrets and configure permissions."
 }
+
+
 
 variable "audience_name" {
   type        = string

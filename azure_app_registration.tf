@@ -4,21 +4,28 @@
 # service principals, and federated identity credentials for the GitHub OIDC app.
 #
 
-
 locals {
-
   application_owners = var.owners == null ? [data.azurerm_client_config.current.object_id] : var.owners
 
-  environments_to_create_apps = [
-    for env in local.repo_environments : env if env.client_id == null && var.identity_type == "azureAdApplication"
-  ]
+  environments_to_create_apps = flatten([
+    for repo_name, repo in var.repositories : [
+      for environment_name, environment in repo.environments : merge(environment, { environment = environment_name, repository_name = repo_name }) if environment.client_id == null && var.identity_type == "azureAdApplication"
+    ]
+  ])
 
-  environments_to_reference_apps = [
-    for env in local.repo_environments : env if env.client_id != null && var.identity_type == "azureAdApplication"
-  ]
+  environments_to_reference_apps = flatten([
+    for repo_name, repo in var.repositories : [
+      for environment_name, environment in repo.environments : merge(environment, { environment = environment_name, repository_name = repo_name }) if environment.client_id != null && var.identity_type == "azureAdApplication"
+    ]
+  ])
 
   subject_template_path = var.override_subject_template_path != null ? var.override_subject_template_path : "${path.module}/templates/subject_template.tpl"
 }
+
+/*
+  # module.gha_repo1.azuread_application.github_oidc["rickardl/teliacompany-azure-wif-test-production"] will be destroyed
+  # (because key ["rickardl/teliacompany-azure-wif-test-production"]
+*/
 
 # The Azure Active Directory application resource is used to create the GitHub OIDC app
 resource "azuread_application" "github_oidc" {
@@ -58,7 +65,7 @@ resource "azuread_service_principal" "github_oidc" {
 # The Azure Active Directory application resource is used to create the GitHub OIDC app
 
 resource "azuread_application_federated_identity_credential" "github_oidc" {
-  for_each       = var.identity_type == "azureAdApplication" ? { for e in local.repo_environments : "${e.repository_name}-${e.environment}" => e } : {}
+  for_each       = var.identity_type == "azureAdApplication" ? { for env in local.repo_environments : "${env.repository_name}-${env.environment}" => env } : {}
   application_id = try(azuread_application.github_oidc["${each.value.repository_name}-${each.value.environment}"].id, data.azuread_application.existing["${each.value.repository_name}-${each.value.environment}"].id)
   display_name   = replace(each.key, "/", "%2F")
   description    = "Deployments for ${each.value.repository_name} for environment ${each.value.environment}"

@@ -8,10 +8,10 @@
 
 locals {
   flattened_environments = flatten([
-    for repo in var.repositories : [
-      for environment in repo.environments : {
-        repository_name       = repo.repository_name
-        environment           = environment.environment
+    for repo_name, repo in var.repositories : [
+      for environment_name, environment in repo.environments : {
+        repository_name       = repo_name
+        environment           = environment_name
         name_prefix           = environment.name_prefix
         subscription_id       = try(environment.subscription_id, data.azurerm_subscription.current.subscription_id)
         client_id             = try(environment.client_id, null)
@@ -28,8 +28,8 @@ locals {
 
 # The GitHub repository data source is used to retrieve the repository name
 data "github_repository" "repo" {
-  for_each  = { for repo in var.repositories : repo.repository_name => repo }
-  full_name = each.value.repository_name
+  for_each  = toset([for repo_name, repo in var.repositories : repo_name])
+  full_name = each.value
 }
 
 

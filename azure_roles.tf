@@ -4,25 +4,25 @@
 # including both standard and inline role assignments for the configured repositories and environments.
 #
 
-
 locals {
 
   # Flatten the environments into a single list
   repo_environments = flatten([
-    for repo in var.repositories : [
-      for environment in repo.environments : {
-        repository_name       = repo.repository_name
+    for repo_name, repo in var.repositories : [
+      for environment_name, environment in repo.environments : {
+        repository_name       = repo_name
         client_id             = environment.client_id
         name_prefix           = environment.name_prefix
         managed_identity_name = try(environment.managed_identity_name, null)
         resource_group_name   = try(environment.resource_group_name, null)
-        environment           = environment.environment
+        environment           = environment_name
         tags                  = lookup(environment, "tags", {})
         roles                 = lookup(environment, "roles", {})
         inline_roles          = lookup(environment, "inline_roles", [])
       }
     ]
   ])
+
 
   # Flatten the inline roles into a single list
   inline_roles = flatten([
