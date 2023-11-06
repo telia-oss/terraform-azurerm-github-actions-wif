@@ -22,14 +22,14 @@ variable "environment" {
 }
 
 variable "repositories" {
-  type = list(object({
-    repository_name = string
-    environments = list(object({
-      environment     = string
-      name_prefix     = string
-      client_id       = optional(string)
-      subscription_id = optional(string)
-      tags            = optional(map(string))
+  type = map(object({
+    environments = map(object({
+      name_prefix           = string
+      client_id             = optional(string)
+      subscription_id       = optional(string)
+      resource_group_name   = optional(string)
+      managed_identity_name = optional(string)
+      tags                  = optional(map(string))
       roles = optional(map(object({
         scopes = set(string)
       })))
@@ -45,8 +45,10 @@ variable "repositories" {
       })))
     }))
   }))
-  description = "List of repositories and their respective environments for which to create secrets and configure permissions."
+  description = "Map of repositories and their respective environments for which to create secrets and configure permissions."
 }
+
+
 
 variable "audience_name" {
   type        = string
@@ -78,4 +80,14 @@ variable "override_subject_template_path" {
   description = "set this to override the default subject template for the workload identity subject."
   type        = string
   default     = null
+}
+
+variable "identity_type" {
+  description = "Defines the Azure identity type to be utilized when creating new resources. Choose 'userAssignedIdentity' to create a user managed identity or 'azureAdApplication' to create an Azure Active Directory application."
+  type        = string
+  default     = "userAssignedIdentity"
+  validation {
+    condition     = var.identity_type == "userAssignedIdentity" || var.identity_type == "azureAdApplication"
+    error_message = "The identity_type value must be either 'azureAdApplication' (for creating Active Directory applications) or 'userAssignedIdentity' (for creating user managed identities)."
+  }
 }

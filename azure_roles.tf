@@ -4,37 +4,41 @@
 # including both standard and inline role assignments for the configured repositories and environments.
 #
 
-
 locals {
 
   # Flatten the environments into a single list
   repo_environments = flatten([
-    for repo in var.repositories : [
-      for environment in repo.environments : {
-        repository_name = repo.repository_name
-        client_id       = environment.client_id
-        name_prefix     = environment.name_prefix
-        environment     = environment.environment
-        tags            = lookup(environment, "tags", {})
-        roles           = lookup(environment, "roles", {})
-        inline_roles    = lookup(environment, "inline_roles", [])
+    for repo_name, repo in var.repositories : [
+      for environment_name, environment in repo.environments : {
+        repository_name       = repo_name
+        client_id             = environment.client_id
+        name_prefix           = environment.name_prefix
+        managed_identity_name = try(environment.managed_identity_name, null)
+        resource_group_name   = try(environment.resource_group_name, null)
+        environment           = environment_name
+        tags                  = lookup(environment, "tags", {})
+        roles                 = lookup(environment, "roles", {})
+        inline_roles          = lookup(environment, "inline_roles", [])
       }
     ]
   ])
+
 
   # Flatten the inline roles into a single list
   inline_roles = flatten([
     for env in local.repo_environments : [
       for role_name, role in env.inline_roles : {
-        repository_name   = env.repository_name
-        client_id         = env.client_id
-        role_name         = role_name
-        name_prefix       = env.name_prefix
-        environment       = env.environment
-        assignable        = role.assignable
-        permissions       = role.permissions
-        scope             = role.scope
-        assignable_scopes = try(role.assignable_scopes, [role.scope])
+        repository_name       = env.repository_name
+        client_id             = env.client_id
+        managed_identity_name = env.managed_identity_name
+        resource_group_name   = env.resource_group_name
+        role_name             = role_name
+        name_prefix           = env.name_prefix
+        environment           = env.environment
+        assignable            = role.assignable
+        permissions           = role.permissions
+        scope                 = role.scope
+        assignable_scopes     = try(role.assignable_scopes, [role.scope])
       }
     ] if env.inline_roles != null ? length(env.inline_roles) > 0 : false
   ])
@@ -44,17 +48,20 @@ locals {
     for env in local.repo_environments : [
       for role_name, role in env.roles : [
         for scope in lookup(role, "scopes", []) : {
-          repository_name    = env.repository_name
-          name_prefix        = env.name_prefix
-          client_id          = env.client_id
-          environment        = env.environment
-          role_name          = role_name
-          role_definition_id = null
-          scope              = scope
+          repository_name       = env.repository_name
+          name_prefix           = env.name_prefix
+          client_id             = env.client_id
+          managed_identity_name = env.managed_identity_name
+          resource_group_name   = env.resource_group_name
+          environment           = env.environment
+          role_name             = role_name
+          role_definition_id    = null
+          scope                 = scope
         }
       ]
     ] if env.roles != null ? length(env.roles) > 0 : false
   ])
+
 }
 
 # Lookup the service principal for the applications where we got an application ID
@@ -72,17 +79,13 @@ resource "azurerm_role_assignment" "standard_role_assignment" {
 
     "${role_assignment.repository_name}-${role_assignment.environment}-${role_assignment.role_name}-${role_assignment.scope}" => role_assignment
   }
-  principal_id = try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.client_id}-${each.value.environment}"].object_id,
-  azuread_service_principal.github_oidc["${each.value.repository_name}-${each.value.environment}"].object_id)
+  principal_id = var.identity_type == "azureAdApplication" ? try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.client_id}-${each.value.environment}"].object_id,
+    azuread_service_principal.github_oidc["${each.value.repository_name}-${each.value.environment}"].object_id) : try(data.azurerm_user_assigned_identity.lookup["${each.value.repository_name}-${each.value.environment}"].principal_id,
+  azurerm_user_assigned_identity.github_oidc["${each.value.repository_name}-${each.value.environment}"].principal_id)
   scope                = each.value.scope
   role_definition_name = each.value.role_name
 }
 
-output "inline_roles" {
-
-  value = local.inline_roles
-
-}
 
 # Inline roles
 resource "azurerm_role_assignment" "inline_role_assignment" {
@@ -90,9 +93,10 @@ resource "azurerm_role_assignment" "inline_role_assignment" {
     for role_assignment in local.inline_roles :
     "${role_assignment.repository_name}-${role_assignment.environment}-${role_assignment.role_name}-${role_assignment.scope}" => role_assignment
   }
+  principal_id = var.identity_type == "azureAdApplication" ? try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.client_id}-${each.value.environment}"].object_id,
+    azuread_service_principal.github_oidc["${each.value.repository_name}-${each.value.environment}"].object_id) : try(data.azurerm_user_assigned_identity.lookup["${each.value.repository_name}-${each.value.environment}"].principal_id,
+  azurerm_user_assigned_identity.github_oidc["${each.value.repository_name}-${each.value.environment}"].principal_id)
 
-  principal_id = try(data.azuread_service_principal.lookup["${each.value.repository_name}-${each.value.client_id}-${each.value.environment}"].object_id,
-  azuread_service_principal.github_oidc["${each.value.repository_name}-${each.value.environment}"].object_id)
   scope = each.value.scope
 
   role_definition_id = azurerm_role_definition.inline_role_definition["${each.value.repository_name}-${each.value.role_name}-${each.value.environment}"].role_definition_resource_id
